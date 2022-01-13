@@ -18,9 +18,6 @@ fn main() -> Result<(), Box<dyn Error>>{
 }
 
 fn update(event: Option<Event>, state: &mut State, buffer: &mut String) -> Result<(), Box<dyn Error>> {
-    if event == Some(Event::Key(KeyCode::Esc.into())) {
-        exit(0);
-    }
     
     execute!(stdout(), Clear(ClearType::All), MoveTo(0, 0))?;
 
@@ -41,6 +38,8 @@ fn update(event: Option<Event>, state: &mut State, buffer: &mut String) -> Resul
                 } else if code == KeyCode::Insert {
                     *state = State::Loading("".into());
                     return update(None, state, buffer);
+                } else if code == KeyCode::Esc {
+                    exit(0);
                 }
             }
         
@@ -66,8 +65,13 @@ fn update(event: Option<Event>, state: &mut State, buffer: &mut String) -> Resul
                     file.write_all(buffer.as_bytes())?;
                     *state = State::Editing;
                     return update(None, state, buffer);
+                } else if code == KeyCode::Esc {
+                    *state = State::Editing;
+                    return update(None, state, buffer);
                 }
             }
+
+            stdout().execute(Print("Save File: "))?;
 
             for character in path.chars() {
                 match character {
@@ -87,8 +91,13 @@ fn update(event: Option<Event>, state: &mut State, buffer: &mut String) -> Resul
                     file.read_to_string(buffer)?;
                     *state = State::Editing;
                     return update(None, state, buffer);
+                } else if code == KeyCode::Esc {
+                    *state = State::Editing;
+                    return update(None, state, buffer);
                 }
             }
+
+            stdout().execute(Print("Load File: "))?;
 
             for character in path.chars() {
                 match character {
