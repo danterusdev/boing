@@ -2,7 +2,7 @@ use std::{error::Error, process::exit, io::{stdout, Write, Read}, fs::File};
 
 use crossterm::{event::{Event, KeyEvent, KeyCode}, execute, cursor::MoveTo, style::Print, ExecutableCommand};
 
-use crate::application::Application;
+use crate::{application::Application, Context};
 
 pub struct Editor {
     state: State,
@@ -20,8 +20,17 @@ impl Editor {
     }
 }
 
+impl crate::application::Editor for Editor {
+    fn open(file: String) -> Result<Box<dyn Application>, Box<dyn Error>> {
+        let mut editor = Self::new();
+        let mut file = File::open(file)?;
+        file.read_to_string(&mut editor.edit_state.buffer)?;
+        Ok(Box::new(editor))
+    }
+}
+
 impl Application for Editor {
-    fn update(&mut self, event: Option<Event>) -> Result<(), Box<dyn Error>> {
+    fn update(&mut self, event: Option<Event>, context: &mut Context) -> Result<(), Box<dyn Error>> {
         match self.state.clone() {
             State::Editing => {
                 let lines: Vec<&str> = self.edit_state.buffer.split("\n").collect();
@@ -86,10 +95,10 @@ impl Application for Editor {
                         }
                     } else if code == KeyCode::Tab {
                         self.state = State::Saving("".into());
-                        return self.update(None);
+                        return self.update(None, context);
                     } else if code == KeyCode::Insert {
                         self.state = State::Loading("".into());
-                        return self.update(None);
+                        return self.update(None, context);
                     } else if code == KeyCode::Esc {
                         exit(0);
                     }
@@ -118,10 +127,10 @@ impl Application for Editor {
                         let mut file = File::create(&path)?;
                         file.write_all(self.edit_state.buffer.as_bytes())?;
                         self.state = State::Editing;
-                        return self.update(None);
+                        return self.update(None, context);
                     } else if code == KeyCode::Esc {
                         self.state = State::Editing;
-                        return self.update(None);
+                        return self.update(None, context);
                     }
                 }
     
@@ -144,10 +153,10 @@ impl Application for Editor {
                         self.edit_state.buffer.clear();
                         file.read_to_string(&mut self.edit_state.buffer)?;
                         self.state = State::Editing;
-                        return self.update(None);
+                        return self.update(None, context);
                     } else if code == KeyCode::Esc {
                         self.state = State::Editing;
-                        return self.update(None);
+                        return self.update(None, context);
                     }
                 }
     
