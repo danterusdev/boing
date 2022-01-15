@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn Error>>{
     execute!(stdout(), Clear(ClearType::All), MoveTo(0, 0))?;
 
     let mut state = SystemState {
-        current_application: Box::new(Files::new()),
+        current_application: Box::new(Files::new()?),
     };
 
     update_application(&mut state, None)?;

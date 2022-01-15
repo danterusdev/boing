@@ -6,23 +6,23 @@ use crate::{application::Application, Context};
 
 pub struct Editor {
     state: State,
-    edit_state: EditState
+    edit_state: EditState,
 }
 
 impl Editor {
-    pub fn new() -> Self {
-        Self {
+    pub fn new() -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
             state: State::Editing,
             edit_state: EditState {
                 buffer: String::new(), row: 0, column: 0
-            }
-        }
+            },
+        })
     }
 }
 
 impl crate::application::Editor for Editor {
     fn open(file: String) -> Result<Box<dyn Application>, Box<dyn Error>> {
-        let mut editor = Self::new();
+        let mut editor = Self::new()?;
         let mut file = File::open(file)?;
         file.read_to_string(&mut editor.edit_state.buffer)?;
         Ok(Box::new(editor))
